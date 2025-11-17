@@ -28,69 +28,73 @@ struct ArticleRow: View {
                             image
                                 .resizable()
                         case .failure(let error):
-                            
-                            Text("Error: \(error.localizedDescription)")
+                            Image(systemName: "photo")
+                                .font(.system(size: 140))
+                                .foregroundColor(.gray)
                         @unknown default:
                             EmptyView()
                         }
                     }
                     
                     .scaledToFill()
-                    .frame(width: 320, height: 200)
+                    .frame(width: 350, height: 200)
                     .clipped()
                     .cornerRadius(8)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text(article.title)
                         .font(.headline)
-                        
+                    
                     HStack {
-                        Text(article.source.name)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        
+                            if !showDeleteButton {
+                                Button(action: {
+                                    if isFavorite {
+                                        favoritesService.removeFromFavorites(article)
+                                        isFavorite = false
+                                    } else {
+                                        favoritesService.addToFavorites(article)
+                                        isFavorite = true
+                                    }
+                                }) {
+                                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                        .foregroundColor(isFavorite ? .red : .gray)
+                                }
+                            }
+                            
+                            if showDeleteButton {
+                              
+                                Button(action: {
+                                    favoritesService.removeFromFavorites(article)
+                                    onDelete?()
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        
                         
                         Spacer()
-                        
-                        if let publishedAt = formatDate(article.publishedAt) {
-                            Text(publishedAt)
+                        VStack {
+                            Text(article.source.name)
                                 .font(.caption)
+                                .bold()
                                 .foregroundColor(.secondary)
+                            
+                            if let publishedAt = formatDate(article.publishedAt) {
+                                Text(publishedAt)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }
                 
                 Spacer()
             }
-            
-            HStack {
-                Button(action: {
-                    if isFavorite {
-                        favoritesService.removeFromFavorites(article)
-                        isFavorite = false
-                    } else {
-                        favoritesService.addToFavorites(article)
-                        isFavorite = true
-                    }
-                }) {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .foregroundColor(isFavorite ? .red : .gray)
-                }
-                
-                if showDeleteButton {
-                    Spacer()
-                    
-                    Button(action: {
-                        favoritesService.removeFromFavorites(article)
-                        onDelete?()
-                    }) {
-                        Image(systemName: "trash")
-                            .foregroundColor(.red)
-                    }
-                }
-            }
         }
-        .padding()
+        .padding(.vertical)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)

@@ -95,18 +95,31 @@ struct SearchBar: View {
     var onSearchButtonClicked: () -> Void
     
     var body: some View {
-        HStack {
-            TextField("Пошук новин...", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onSubmit {
-                    onSearchButtonClicked()
-                }
-            
-            Button(action: onSearchButtonClicked) {
+            HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.gray)
+                    .font(.system(size: 16))
+                
+                TextField("Пошук новин...", text: $text)
+                    .font(.system(size: 16))
+                    .onSubmit {
+                        onSearchButtonClicked()
+                    }
+                
+                if !text.isEmpty {
+                    Button(action: {
+                        text = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 16))
+                    }
+                }
             }
-        }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            
     }
 }
-

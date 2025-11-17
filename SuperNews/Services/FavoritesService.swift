@@ -17,6 +17,8 @@ class FavoritesService {
     }
     
     func addToFavorites(_ article: Article) {
+        guard !isFavorite(article) else { return }
+        
         let favorite = FavoriteArticle(
             title: article.title,
             articleDescription: article.description,

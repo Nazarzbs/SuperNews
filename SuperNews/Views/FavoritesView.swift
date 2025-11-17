@@ -75,7 +75,7 @@ struct FavoritesView: View {
                 if viewModel == nil, let favoritesService = favoritesService {
                     viewModel = FavoritesViewModel(favoritesService: favoritesService)
                 }
-                viewModel?.loadArticles()
+                viewModel?.loadArticles(isRefreshing: true)
             }
         }
     }
