@@ -19,27 +19,33 @@ struct ArticleRow: View {
         VStack(alignment: .leading, spacing: 8) {
             VStack {
                 if let urlToImage = article.urlToImage, let imageURL = URL(string: urlToImage) {
-                    AsyncImage(url: imageURL) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                            
-                        case .success(let image):
-                            image
-                                .resizable()
-                        case .failure(let error):
-                            Image(systemName: "photo")
-                                .font(.system(size: 140))
-                                .foregroundColor(.gray)
-                        @unknown default:
-                            EmptyView()
-                        }
+                    CachedAsyncImage(url: imageURL) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 350, height: 200)
+                            .clipped()
+                            .cornerRadius(8)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .frame(width: 350, height: 200)
+                            .cornerRadius(8)
+                            .overlay(
+                                ProgressView()
+                                    .tint(.gray)
+                            )
                     }
-                    
-                    .scaledToFill()
-                    .frame(width: 350, height: 200)
-                    .clipped()
-                    .cornerRadius(8)
+                } else {
+                    Rectangle()
+                        .fill(Color(.systemGray5))
+                        .frame(width: 350, height: 200)
+                        .cornerRadius(8)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                        )
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {

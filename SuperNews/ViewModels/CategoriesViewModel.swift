@@ -34,6 +34,23 @@ class CategoriesViewModel {
         
         Task {
             do {
+                // Load cached data first if available and not refreshing
+                if !isRefreshing && articles.isEmpty {
+                    if let cachedResponse = await NewsService.shared.getCachedTopHeadlines(
+                        page: currentPage,
+                        pageSize: pageSize,
+                        category: selectedCategory
+                    ) {
+                        let filteredArticles = cachedResponse.articles.filter { article in
+                            guard let urlToImage = article.urlToImage, !urlToImage.isEmpty else {
+                                return false
+                            }
+                            return true
+                        }
+                        articles = filteredArticles
+                    }
+                }
+                
                 let response = try await NewsService.shared.fetchTopHeadlines(
                     page: currentPage,
                     pageSize: pageSize,

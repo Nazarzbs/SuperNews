@@ -14,21 +14,24 @@ struct FavoritesView: View {
     @State private var viewModel: FavoritesViewModel?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 if let viewModel = viewModel {
                     ScrollView {
                         LazyVStack(spacing: 16) {
                             ForEach(viewModel.articles) { article in
                                 if let favoritesService = favoritesService {
-                                    ArticleRow(
-                                        article: article,
-                                        favoritesService: favoritesService,
-                                        showDeleteButton: true,
-                                        onDelete: {
-                                            viewModel.removeFavorite(article)
-                                        }
-                                    )
+                                    NavigationLink(value: article) {
+                                        ArticleRow(
+                                            article: article,
+                                            favoritesService: favoritesService,
+                                            showDeleteButton: true,
+                                            onDelete: {
+                                                viewModel.removeFavorite(article)
+                                            }
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
                                     .onAppear {
                                         if article.id == viewModel.articles.last?.id {
                                             viewModel.loadMoreArticles()
@@ -43,22 +46,16 @@ struct FavoritesView: View {
                                     .padding()
                             }
                         }
-                        .padding()
+                        .padding(.horizontal)
                     }
+                    .scrollIndicators(.hidden)
+                    .background(Color(.systemGroupedBackground))
                     .refreshable {
                         await refreshArticles()
                     }
                     
                     if viewModel.articles.isEmpty && !viewModel.isLoading {
-                        VStack {
-                            Image(systemName: "heart.slash")
-                                .font(.system(size: 50))
-                                .foregroundColor(.gray)
-                            Text("Немає обраних новин")
-                                .foregroundColor(.gray)
-                                .padding(.top)
-                            Spacer()
-                        }
+                        ContentUnavailableView("Немає обраних новин", systemImage: "heart.slash")
                     }
                     
                     if viewModel.isLoading && viewModel.articles.isEmpty {
@@ -68,6 +65,9 @@ struct FavoritesView: View {
                 }
             }
             .navigationTitle("Обране")
+            .navigationDestination(for: Article.self) { article in
+                NewsDetailView(article: article)
+            }
             .onAppear {
                 if favoritesService == nil {
                     favoritesService = FavoritesService(modelContext: modelContext)

@@ -33,6 +33,35 @@ class HomeViewModel {
         
         Task {
             do {
+                // Load cached data first if available and not refreshing
+                if !isRefreshing && articles.isEmpty {
+                    let cachedResponse: NewsResponse?
+                    if searchText.isEmpty {
+                        cachedResponse = await NewsService.shared.getCachedTopHeadlines(
+                            page: currentPage,
+                            pageSize: pageSize
+                        )
+                    } else {
+                        cachedResponse = await NewsService.shared.getCachedSearch(
+                            query: searchText,
+                            page: currentPage,
+                            pageSize: pageSize
+                        )
+                    }
+                    
+                    if let cachedResponse = cachedResponse {
+                        var filteredArticles: [Article] = []
+                        for article in cachedResponse.articles {
+                            guard let url = article.urlToImage, !url.isEmpty else { continue }
+                            let isValid = await validateImageURL(url)
+                            if isValid {
+                                filteredArticles.append(article)
+                            }
+                        }
+                        articles = filteredArticles
+                    }
+                }
+                
                 let response: NewsResponse
                 
                 if searchText.isEmpty {

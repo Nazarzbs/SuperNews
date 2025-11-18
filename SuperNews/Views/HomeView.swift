@@ -14,29 +14,28 @@ struct HomeView: View {
     @State private var favoritesService: FavoritesService?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 SearchBar(text: $viewModel.searchText, onSearchButtonClicked: {
                     viewModel.searchArticles()
                 })
                 .padding(.horizontal)
                 
-                if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .padding()
-                }
-                
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         ForEach(viewModel.articles) { article in
-                            if let favoritesService = favoritesService {
-                                ArticleRow(article: article, favoritesService: favoritesService)
+                            if article.urlToImage != nil {
+                                if let favoritesService = favoritesService {
+                                    NavigationLink(value: article) {
+                                        ArticleRow(article: article, favoritesService: favoritesService)
+                                    }
+                                    .buttonStyle(.plain)
                                     .onAppear {
                                         if article.id == viewModel.articles.last?.id {
                                             viewModel.loadMoreArticles()
                                         }
                                     }
+                                }
                             }
                         }
                         
@@ -46,22 +45,20 @@ struct HomeView: View {
                                 .padding()
                         }
                     }
-                    .padding()
+                    .padding(.horizontal)
                 }
+                .scrollIndicators(.hidden)
+                .background(Color(.systemGroupedBackground))
                 .refreshable {
                     await refreshArticles()
                 }
                 
                 if viewModel.articles.isEmpty && !viewModel.isLoading {
-                    VStack {
-                        Image(systemName: "newspaper")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        Text("Немає новин")
-                            .foregroundColor(.gray)
-                            .padding(.top)
+                    if let errorMessage = viewModel.errorMessage {
+                        ContentUnavailableView(errorMessage, systemImage: "wifi.slash")
+                    } else {
+                        ContentUnavailableView("Немає новин", systemImage: "newspaper")
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 
                 if viewModel.isLoading && viewModel.articles.isEmpty {
@@ -70,6 +67,10 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Головна")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Article.self) { article in
+                NewsDetailView(article: article)
+            }
             .onAppear {
                 if favoritesService == nil {
                     favoritesService = FavoritesService(modelContext: modelContext)
