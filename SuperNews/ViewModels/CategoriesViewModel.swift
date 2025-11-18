@@ -17,9 +17,9 @@ class CategoriesViewModel {
     var currentPage = 1
     var hasMorePages = true
     
-    let categories = ["business", "entertainment", "general", "health", "science", "sports", "technology"]
+    let categories = AppConstants.categories
     
-    private let pageSize = 20
+    private let pageSize = AppConstants.defaultPageSize
     
     func loadArticles(isRefreshing: Bool = false) {
         if isRefreshing {

@@ -10,13 +10,13 @@ import Foundation
 class NewsService {
     static let shared = NewsService()
     
-    private let baseURL = "https://newsapi.org/v2"
-    private let apiKey = "d30476204fc74acba24fc4b9680dac1d" 
+    private let baseURL = AppConstants.baseURL
+    private let apiKey = AppConstants.apiKey
     private let cacheService = CacheService.shared
     
     private init() {}
     
-    func fetchTopHeadlines(page: Int = 1, pageSize: Int = 20, category: String? = nil, country: String = "us") async throws -> NewsResponse {
+    func fetchTopHeadlines(page: Int = 1, pageSize: Int = AppConstants.defaultPageSize, category: String? = nil, country: String = AppConstants.defaultCountry) async throws -> NewsResponse {
         let cacheKey = "top-headlines-\(country)-\(category ?? "all")-\(page)-\(pageSize)"
         
         // Try to fetch from network first
@@ -60,7 +60,7 @@ class NewsService {
         }
     }
     
-    func searchNews(query: String, page: Int = 1, pageSize: Int = 20) async throws -> NewsResponse {
+    func searchNews(query: String, page: Int = 1, pageSize: Int = AppConstants.defaultPageSize) async throws -> NewsResponse {
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             throw NewsError.invalidQuery
         }
@@ -104,12 +104,12 @@ class NewsService {
         }
     }
     
-    func getCachedTopHeadlines(page: Int = 1, pageSize: Int = 20, category: String? = nil, country: String = "us") async -> NewsResponse? {
+    func getCachedTopHeadlines(page: Int = 1, pageSize: Int = AppConstants.defaultPageSize, category: String? = nil, country: String = AppConstants.defaultCountry) async -> NewsResponse? {
         let cacheKey = "top-headlines-\(country)-\(category ?? "all")-\(page)-\(pageSize)"
         return try? await cacheService.retrieve(forKey: cacheKey)
     }
     
-    func getCachedSearch(query: String, page: Int = 1, pageSize: Int = 20) async -> NewsResponse? {
+    func getCachedSearch(query: String, page: Int = 1, pageSize: Int = AppConstants.defaultPageSize) async -> NewsResponse? {
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }

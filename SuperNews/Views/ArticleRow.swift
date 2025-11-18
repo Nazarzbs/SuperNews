@@ -16,21 +16,26 @@ struct ArticleRow: View {
     @State private var isFavorite: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            VStack {
+        VStack(alignment: .leading, spacing: 0) {
+            // Image Section with Gradient Overlay
+            ZStack(alignment: .topTrailing) {
                 if let urlToImage = article.urlToImage, let imageURL = URL(string: urlToImage) {
                     CachedAsyncImage(url: imageURL) { image in
                         image
                             .resizable()
-                            .scaledToFill()
-                            .frame(width: 350, height: 200)
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: UIScreen.main.bounds.width - 32, height: 220)
                             .clipped()
-                            .cornerRadius(8)
                     } placeholder: {
                         Rectangle()
-                            .fill(Color(.systemGray5))
-                            .frame(width: 350, height: 200)
-                            .cornerRadius(8)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(.systemGray6), Color(.systemGray5)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: UIScreen.main.bounds.width - 32, height: 220)
                             .overlay(
                                 ProgressView()
                                     .tint(.gray)
@@ -38,24 +43,66 @@ struct ArticleRow: View {
                     }
                 } else {
                     Rectangle()
-                        .fill(Color(.systemGray5))
-                        .frame(width: 350, height: 200)
-                        .cornerRadius(8)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(.systemGray6), Color(.systemGray5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 220)
                         .overlay(
-                            Image(systemName: "photo")
-                                .font(.system(size: 50))
-                                .foregroundColor(.gray)
+                            Image(systemName: "newspaper.fill")
+                                .font(.system(size: 50, weight: .light))
+                                .foregroundColor(.gray.opacity(0.4))
                         )
                 }
                 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(article.title)
-                        .font(.headline)
+                // Source Badge
+                HStack {
+                    Text(article.source.name)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                        )
+                }
+                .padding([.top, .trailing], 12)
+            }
+            
+            // Content Section
+            VStack(alignment: .leading, spacing: 12) {
+                // Title
+                Text(article.title)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Footer Section
+                HStack(alignment: .center, spacing: 12) {
+                    // Date
+                    if let publishedAt = formatDate(article.publishedAt) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                                .font(.caption2)
+                            Text(publishedAt)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.secondary)
+                    }
                     
-                    HStack {
-                        
-                            if !showDeleteButton {
-                                Button(action: {
+                    Spacer()
+                    
+                    // Action Buttons
+                    HStack(spacing: 16) {
+                        if !showDeleteButton {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                     if isFavorite {
                                         favoritesService.removeFromFavorites(article)
                                         isFavorite = false
@@ -63,51 +110,50 @@ struct ArticleRow: View {
                                         favoritesService.addToFavorites(article)
                                         isFavorite = true
                                     }
-                                }) {
-                                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                                        .foregroundColor(isFavorite ? .red : .gray)
                                 }
+                            }) {
+                                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(isFavorite ? .red : .gray)
+                                    .scaleEffect(isFavorite ? 1.1 : 1.0)
                             }
-                            
-                            if showDeleteButton {
-                              
-                                Button(action: {
+                        }
+                        
+                        if showDeleteButton {
+                            Button(action: {
+                                withAnimation {
                                     favoritesService.removeFromFavorites(article)
                                     onDelete?()
-                                }) {
-                                    Image(systemName: "trash")
-                                        .foregroundColor(.red)
                                 }
-                            }
-                        
-                        
-                        Spacer()
-                        VStack {
-                            Text(article.source.name)
-                                .font(.caption)
-                                .bold()
-                                .foregroundColor(.secondary)
-                            
-                            if let publishedAt = formatDate(article.publishedAt) {
-                                Text(publishedAt)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                            }) {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .padding(8)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.red)
+                                    )
                             }
                         }
                     }
                 }
-                
-                Spacer()
             }
+            .padding(16)
         }
-        .padding(.vertical)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(.systemGray5), lineWidth: 0.5)
+        )
+        .padding(.horizontal)
+        .padding(.vertical, 6)
         .onAppear {
             isFavorite = favoritesService.isFavorite(article)
         }
-        .onChange(of: article.url) { 
+        .onChange(of: article.url) {
             isFavorite = favoritesService.isFavorite(article)
         }
     }
@@ -124,4 +170,3 @@ struct ArticleRow: View {
         return displayFormatter.string(from: date)
     }
 }
-

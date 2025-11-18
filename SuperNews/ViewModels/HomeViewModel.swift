@@ -17,7 +17,7 @@ class HomeViewModel {
     var currentPage = 1
     var hasMorePages = true
 
-    private let pageSize = 20
+    private let pageSize = AppConstants.defaultPageSize
     private var searchTask: Task<Void, Never>?
     
     func loadArticles(isRefreshing: Bool = false) {

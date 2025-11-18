@@ -49,7 +49,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         }
         
         // Check cache first
-        if let cachedImage = ImageCache.shared.getImage(forKey: url.absoluteString) {
+        if let cachedImage = await ImageCache.shared.getImage(forKey: url.absoluteString) {
             await MainActor.run {
                 loadedImage = cachedImage
                 isLoading = false
@@ -70,7 +70,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             }
             
             // Cache the image
-            ImageCache.shared.setImage(image, forKey: url.absoluteString)
+            await ImageCache.shared.setImage(image, forKey: url.absoluteString)
             
             await MainActor.run {
                 loadedImage = image
