@@ -19,45 +19,52 @@ struct ArticleRow: View {
         VStack(alignment: .leading, spacing: 0) {
             // Image Section with Gradient Overlay
             ZStack(alignment: .topTrailing) {
-                if let urlToImage = article.urlToImage, let imageURL = URL(string: urlToImage) {
-                    CachedAsyncImage(url: imageURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: UIScreen.main.bounds.width - 32, height: 220)
-                            .clipped()
-                    } placeholder: {
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(.systemGray6), Color(.systemGray5)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                GeometryReader { proxy in
+                    let width = proxy.size.width
+                    Group {
+                        if let urlToImage = article.urlToImage, let imageURL = URL(string: urlToImage) {
+                            CachedAsyncImage(url: imageURL) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: width, height: 220)
+                                    .clipped()
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(.systemGray6), Color(.systemGray5)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: width, height: 220)
+                                    .overlay(
+                                        ProgressView()
+                                            .tint(.gray)
+                                    )
+                            }
+                        } else {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(.systemGray6), Color(.systemGray5)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .frame(width: UIScreen.main.bounds.width - 32, height: 220)
-                            .overlay(
-                                ProgressView()
-                                    .tint(.gray)
-                            )
+                                .frame(width: width, height: 220)
+                                .overlay(
+                                    Image(systemName: "newspaper.fill")
+                                        .font(.system(size: 50, weight: .light))
+                                        .foregroundColor(.gray.opacity(0.4))
+                                )
+                        }
                     }
-                } else {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(.systemGray6), Color(.systemGray5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: UIScreen.main.bounds.width - 32, height: 220)
-                        .overlay(
-                            Image(systemName: "newspaper.fill")
-                                .font(.system(size: 50, weight: .light))
-                                .foregroundColor(.gray.opacity(0.4))
-                        )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
-                
+                .frame(height: 220)
+
                 // Source Badge
                 HStack {
                     Text(article.source.name)
@@ -148,7 +155,6 @@ struct ArticleRow: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Color(.systemGray5), lineWidth: 0.5)
         )
-        .padding(.horizontal)
         .padding(.vertical, 6)
         .onAppear {
             isFavorite = favoritesService.isFavorite(article)
@@ -170,3 +176,4 @@ struct ArticleRow: View {
         return displayFormatter.string(from: date)
     }
 }
+

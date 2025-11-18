@@ -16,12 +16,23 @@ class NewsService {
     
     private init() {}
     
-    func fetchTopHeadlines(page: Int = 1, pageSize: Int = AppConstants.defaultPageSize, category: String? = nil, country: String = AppConstants.defaultCountry) async throws -> NewsResponse {
-        let cacheKey = "top-headlines-\(country)-\(category ?? "all")-\(page)-\(pageSize)"
+    func fetchTopHeadlines(page: Int = 1, pageSize: Int? = nil, category: String? = nil, country: String? = nil) async throws -> NewsResponse {
+        let resolvedPageSize: Int
+        let resolvedCountry: String
+        if let pageSize = pageSize, let country = country {
+            resolvedPageSize = pageSize
+            resolvedCountry = country
+        } else {
+            // Access AppConstants on the main actor to avoid isolation warnings
+            resolvedPageSize = await MainActor.run { AppConstants.defaultPageSize }
+            resolvedCountry = await MainActor.run { AppConstants.defaultCountry }
+        }
+        
+        let cacheKey = "top-headlines-\(resolvedCountry)-\(category ?? "all")-\(page)-\(resolvedPageSize)"
         
         // Try to fetch from network first
         do {
-            var urlString = "\(baseURL)/top-headlines?country=\(country)&page=\(page)&pageSize=\(pageSize)&apiKey=\(apiKey)"
+            var urlString = "\(baseURL)/top-headlines?country=\(resolvedCountry)&page=\(page)&pageSize=\(resolvedPageSize)&apiKey=\(apiKey)"
             
             if let category = category {
                 urlString += "&category=\(category)"
@@ -60,16 +71,23 @@ class NewsService {
         }
     }
     
-    func searchNews(query: String, page: Int = 1, pageSize: Int = AppConstants.defaultPageSize) async throws -> NewsResponse {
+    func searchNews(query: String, page: Int = 1, pageSize: Int? = nil) async throws -> NewsResponse {
+        let resolvedPageSize: Int
+        if let pageSize = pageSize {
+            resolvedPageSize = pageSize
+        } else {
+            resolvedPageSize = await MainActor.run { AppConstants.defaultPageSize }
+        }
+        
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             throw NewsError.invalidQuery
         }
         
-        let cacheKey = "search-\(encodedQuery)-\(page)-\(pageSize)"
+        let cacheKey = "search-\(encodedQuery)-\(page)-\(resolvedPageSize)"
         
         // Try to fetch from network first
         do {
-            let urlString = "\(baseURL)/everything?q=\(encodedQuery)&page=\(page)&pageSize=\(pageSize)&sortBy=publishedAt&apiKey=\(apiKey)"
+            let urlString = "\(baseURL)/everything?q=\(encodedQuery)&page=\(page)&pageSize=\(resolvedPageSize)&sortBy=publishedAt&apiKey=\(apiKey)"
             
             guard let url = URL(string: urlString) else {
                 throw NewsError.invalidURL
@@ -104,17 +122,33 @@ class NewsService {
         }
     }
     
-    func getCachedTopHeadlines(page: Int = 1, pageSize: Int = AppConstants.defaultPageSize, category: String? = nil, country: String = AppConstants.defaultCountry) async -> NewsResponse? {
-        let cacheKey = "top-headlines-\(country)-\(category ?? "all")-\(page)-\(pageSize)"
-        return try? await cacheService.retrieve(forKey: cacheKey)
+    func getCachedTopHeadlines(page: Int = 1, pageSize: Int? = nil, category: String? = nil, country: String? = nil) async -> NewsResponse? {
+        let defaultPageSize = await MainActor.run { AppConstants.defaultPageSize }
+        let defaultCountry = await MainActor.run { AppConstants.defaultCountry }
+        let resolvedPageSize = pageSize ?? defaultPageSize
+        let resolvedCountry = country ?? defaultCountry
+        let cacheKey = "top-headlines-\(resolvedCountry)-\(category ?? "all")-\(page)-\(resolvedPageSize)"
+        do {
+            let cached: NewsResponse? = try await cacheService.retrieve(forKey: cacheKey)
+            return cached
+        } catch {
+            return nil
+        }
     }
     
-    func getCachedSearch(query: String, page: Int = 1, pageSize: Int = AppConstants.defaultPageSize) async -> NewsResponse? {
+    func getCachedSearch(query: String, page: Int = 1, pageSize: Int? = nil) async -> NewsResponse? {
+        let defaultPageSize = await MainActor.run { AppConstants.defaultPageSize }
+        let resolvedPageSize = pageSize ?? defaultPageSize
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
-        let cacheKey = "search-\(encodedQuery)-\(page)-\(pageSize)"
-        return try? await cacheService.retrieve(forKey: cacheKey)
+        let cacheKey = "search-\(encodedQuery)-\(page)-\(resolvedPageSize)"
+        do {
+            let cached: NewsResponse? = try await cacheService.retrieve(forKey: cacheKey)
+            return cached
+        } catch {
+            return nil
+        }
     }
 }
 
@@ -137,4 +171,3 @@ enum NewsError: Error, LocalizedError {
         }
     }
 }
-
