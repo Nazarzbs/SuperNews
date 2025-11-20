@@ -30,9 +30,9 @@ struct HomeView: View {
                                         ArticleRow(article: article, favoritesService: favoritesService)
                                     }
                                     .buttonStyle(.plain)
-                                    .onAppear {
+                                    .task {
                                         if article.id == viewModel.articles.last?.id {
-                                            viewModel.loadMoreArticles()
+                                            await viewModel.loadMoreArticles()
                                         }
                                     }
                                 }
@@ -71,12 +71,12 @@ struct HomeView: View {
             .navigationDestination(for: Article.self) { article in
                 NewsDetailView(article: article)
             }
-            .onAppear {
+            .task {
                 if favoritesService == nil {
                     favoritesService = FavoritesService(modelContext: modelContext)
                 }
                 if viewModel.articles.isEmpty {
-                    viewModel.loadArticles()
+                    await viewModel.loadArticles()
                 }
             }
         }
@@ -84,7 +84,7 @@ struct HomeView: View {
     
     @MainActor
     private func refreshArticles() async {
-        viewModel.loadArticles(isRefreshing: true)
+        await viewModel.loadArticles(isRefreshing: true)
         while viewModel.isLoading {
             try? await Task.sleep(nanoseconds: 100_000_000)
         }

@@ -21,7 +21,7 @@ class CategoriesViewModel {
     
     private let pageSize = AppConstants.defaultPageSize
     
-    func loadArticles(isRefreshing: Bool = false) {
+    func loadArticles(isRefreshing: Bool = false) async {
         if isRefreshing {
             currentPage = 1
             hasMorePages = true
@@ -31,8 +31,7 @@ class CategoriesViewModel {
         
         isLoading = true
         errorMessage = nil
-        
-        Task {
+       
             do {
                 // Load cached data first if available and not refreshing
                 if !isRefreshing && articles.isEmpty {
@@ -79,13 +78,13 @@ class CategoriesViewModel {
                 errorMessage = error.localizedDescription
                 isLoading = false
             }
-        }
+        
     }
     
-    func loadMoreArticles() {
+    func loadMoreArticles() async {
         guard !isLoading && hasMorePages else { return }
         currentPage += 1
-        loadArticles()
+        await loadArticles()
     }
     
     func selectCategory(_ category: String?) {
@@ -93,7 +92,6 @@ class CategoriesViewModel {
         currentPage = 1
         hasMorePages = true
         articles = []
-        loadArticles()
     }
 }
 

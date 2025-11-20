@@ -29,7 +29,6 @@ class FavoritesViewModel {
         
         isLoading = true
         
-        Task {
             let fetchedArticles = favoritesService.fetchFavorites(
                 page: currentPage,
                 pageSize: pageSize
@@ -52,7 +51,6 @@ class FavoritesViewModel {
             hasMorePages = articles.count < totalCount
             
             isLoading = false
-        }
     }
     
     func loadMoreArticles() {

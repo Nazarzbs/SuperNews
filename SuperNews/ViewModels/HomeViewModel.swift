@@ -20,7 +20,7 @@ class HomeViewModel {
     private let pageSize = AppConstants.defaultPageSize
     private var searchTask: Task<Void, Never>?
     
-    func loadArticles(isRefreshing: Bool = false) {
+    func loadArticles(isRefreshing: Bool = false) async {
         if isRefreshing {
             currentPage = 1
             hasMorePages = true
@@ -31,7 +31,6 @@ class HomeViewModel {
         isLoading = true
         errorMessage = nil
         
-        Task {
             do {
                 // Load cached data first if available and not refreshing
                 if !isRefreshing && articles.isEmpty {
@@ -106,13 +105,12 @@ class HomeViewModel {
                 errorMessage = error.localizedDescription
                 isLoading = false
             }
-        }
     }
     
-    func loadMoreArticles() {
+    func loadMoreArticles() async {
         guard !isLoading && hasMorePages else { return }
         currentPage += 1
-        loadArticles()
+        await loadArticles()
     }
     
     func searchArticles() {
@@ -125,7 +123,7 @@ class HomeViewModel {
                 currentPage = 1
                 hasMorePages = true
                 articles = []
-                loadArticles()
+                await loadArticles()
             }
         }
     }
