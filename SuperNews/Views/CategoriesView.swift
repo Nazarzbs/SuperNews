@@ -46,15 +46,19 @@ struct CategoriesView: View {
                     LazyVStack(spacing: 16) {
                         ForEach(viewModel.articles) { article in
                             if article.urlToImage != nil {
-                                if let favoritesService = favoritesService {
-                                    NavigationLink(value: article) {
-                                        ArticleRow(article: article, favoritesService: favoritesService)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .task {
-                                        if article.id == viewModel.articles.last?.id {
-                                            await viewModel.loadMoreArticles()
+                                NavigationLink(value: article) {
+                                    ArticleRow(
+                                        article: article,
+                                        isFavorite: viewModel.isFavorite(article),
+                                        onToggleFavorite: {
+                                            viewModel.toggleFavorite(article)
                                         }
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .task {
+                                    if article.id == viewModel.articles.last?.id {
+                                        await viewModel.loadMoreArticles()
                                     }
                                 }
                             }
@@ -94,11 +98,18 @@ struct CategoriesView: View {
             }
             .task {
                 if favoritesService == nil {
-                    favoritesService = FavoritesService(modelContext: modelContext)
+                    let service = FavoritesService(modelContext: modelContext)
+                    favoritesService = service
+                    viewModel.setFavoritesService(service)
                 }
                 if viewModel.articles.isEmpty {
                     await viewModel.loadArticles()
+                } else {
+                    viewModel.updateFavoriteStatuses()
                 }
+            }
+            .onChange(of: viewModel.articles) {
+                viewModel.updateFavoriteStatuses()
             }
         }
     }

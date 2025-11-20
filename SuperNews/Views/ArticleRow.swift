@@ -9,11 +9,10 @@ import SwiftUI
 
 struct ArticleRow: View {
     let article: Article
-    var favoritesService: FavoritesService
+    var isFavorite: Bool
+    var onToggleFavorite: () -> Void
     var showDeleteButton: Bool = false
     var onDelete: (() -> Void)? = nil
-    
-    @State private var isFavorite: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -110,13 +109,7 @@ struct ArticleRow: View {
                         if !showDeleteButton {
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    if isFavorite {
-                                        favoritesService.removeFromFavorites(article)
-                                        isFavorite = false
-                                    } else {
-                                        favoritesService.addToFavorites(article)
-                                        isFavorite = true
-                                    }
+                                    onToggleFavorite()
                                 }
                             }) {
                                 Image(systemName: isFavorite ? "heart.fill" : "heart")
@@ -129,7 +122,6 @@ struct ArticleRow: View {
                         if showDeleteButton {
                             Button(action: {
                                 withAnimation {
-                                    favoritesService.removeFromFavorites(article)
                                     onDelete?()
                                 }
                             }) {
@@ -156,12 +148,6 @@ struct ArticleRow: View {
                 .stroke(Color(.systemGray5), lineWidth: 0.5)
         )
         .padding(.vertical, 6)
-        .onAppear {
-            isFavorite = favoritesService.isFavorite(article)
-        }
-        .onChange(of: article.url) {
-            isFavorite = favoritesService.isFavorite(article)
-        }
     }
     
     private func formatDate(_ dateString: String) -> String? {

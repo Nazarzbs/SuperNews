@@ -8,7 +8,6 @@
 import SwiftData
 import Foundation
 
-@Observable
 class FavoritesService {
     private var modelContext: ModelContext
     

@@ -63,5 +63,10 @@ class FavoritesViewModel {
         favoritesService.removeFromFavorites(article)
         articles.removeAll { $0.url == article.url }
     }
+    
+    func isFavorite(_ article: Article) -> Bool {
+        // В FavoritesView все статьи по определению являются избранными
+        return true
+    }
 }
 

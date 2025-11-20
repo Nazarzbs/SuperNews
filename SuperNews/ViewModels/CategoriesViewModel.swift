@@ -16,10 +16,17 @@ class CategoriesViewModel {
     var selectedCategory: String? = nil
     var currentPage = 1
     var hasMorePages = true
+    var favoriteArticleUrls: Set<String> = []
     
     let categories = AppConstants.categories
     
     private let pageSize = AppConstants.defaultPageSize
+    private var favoritesService: FavoritesService?
+    
+    func setFavoritesService(_ service: FavoritesService) {
+        self.favoritesService = service
+        updateFavoriteStatuses()
+    }
     
     func loadArticles(isRefreshing: Bool = false) async {
         if isRefreshing {
@@ -92,6 +99,29 @@ class CategoriesViewModel {
         currentPage = 1
         hasMorePages = true
         articles = []
+    }
+    
+    // MARK: - Favorites Management
+    
+    func isFavorite(_ article: Article) -> Bool {
+        favoriteArticleUrls.contains(article.url)
+    }
+    
+    func toggleFavorite(_ article: Article) {
+        guard let favoritesService = favoritesService else { return }
+        
+        if isFavorite(article) {
+            favoritesService.removeFromFavorites(article)
+            favoriteArticleUrls.remove(article.url)
+        } else {
+            favoritesService.addToFavorites(article)
+            favoriteArticleUrls.insert(article.url)
+        }
+    }
+    
+    func updateFavoriteStatuses() {
+        guard let favoritesService = favoritesService else { return }
+        favoriteArticleUrls = Set(articles.filter { favoritesService.isFavorite($0) }.map { $0.url })
     }
 }
 

@@ -20,22 +20,23 @@ struct FavoritesView: View {
                     ScrollView {
                         LazyVStack(spacing: 16) {
                             ForEach(viewModel.articles) { article in
-                                if let favoritesService = favoritesService {
-                                    NavigationLink(value: article) {
-                                        ArticleRow(
-                                            article: article,
-                                            favoritesService: favoritesService,
-                                            showDeleteButton: true,
-                                            onDelete: {
-                                                viewModel.removeFavorite(article)
-                                            }
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .onAppear {
-                                        if article.id == viewModel.articles.last?.id {
-                                            viewModel.loadMoreArticles()
+                                NavigationLink(value: article) {
+                                    ArticleRow(
+                                        article: article,
+                                        isFavorite: viewModel.isFavorite(article),
+                                        onToggleFavorite: {
+                                            viewModel.removeFavorite(article)
+                                        },
+                                        showDeleteButton: true,
+                                        onDelete: {
+                                            viewModel.removeFavorite(article)
                                         }
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .onAppear {
+                                    if article.id == viewModel.articles.last?.id {
+                                        viewModel.loadMoreArticles()
                                     }
                                 }
                             }
